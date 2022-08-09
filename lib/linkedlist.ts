@@ -1,9 +1,10 @@
 import { Console } from "console";
+import LogSource from "./log-source";
 
 export interface LogValue {
     date: Date,
     msg: string,
-    index?: number
+    source?: LogSource
   }
 
 export class Node {

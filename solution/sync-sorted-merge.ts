@@ -1,6 +1,7 @@
 "use strict";
 
-import { LinkedList } from "../lib/linkedlist";
+import AVLTree from 'avl';
+import { LinkedList, LogValue } from "../lib/linkedlist";
 import LogSource  from "../lib/log-source";
 
 // Print all entries, across all of the sources, in chronological order.
@@ -10,7 +11,16 @@ import LogSource  from "../lib/log-source";
 
 module.exports = (logSources, printer) => {
 
-  let linkedList = undefined;
+    function comparator(a: LogValue, b: LogValue) {
+    if (a.date < b.date) return -1;
+  
+    if (a.date > b.date) return 1;
+  
+    return 0;
+  }
+
+  const tree = new AVLTree(comparator);
+
   for (let i = 0; i < logSources.length; i++) {
     let logSource = logSources[i];
     let poppedValue = logSource?.pop();
@@ -19,39 +29,37 @@ module.exports = (logSources, printer) => {
       // do nothing
     } else {
       poppedValue.source = logSource;
-  
-      if (linkedList === undefined){
-        linkedList = new LinkedList(poppedValue);
-      } else {
-        linkedList.add(poppedValue);
-      }
+      tree.insert(poppedValue);
+
     }
   } 
-    
-  
-  
-  while ((linkedList as LinkedList).length > 0) {
 
-    let minNode = linkedList?.popHead();
-    printer.print(minNode?.value);
+  while (tree.size > 0) {
+    let minNodeValue = tree.pop().key as LogValue;
+    printer.print(minNodeValue);
 
-    let logSource = minNode?.value?.source as LogSource;
+
+
+    let logSource = minNodeValue.source as LogSource;
     
     if (!logSource?.drained){
       let poppedLog = logSource?.pop();
 
 
       if (poppedLog !== false && poppedLog !== undefined){
-        poppedLog.source = minNode?.value?.source;
-        linkedList?.add(poppedLog);
+        poppedLog.source = logSource;
+        tree.insert(poppedLog);
       } else {
-        console.log(`Drainned LogSource}`);
+        //console.log(`Drainned LogSource}`);
 
       }
     } else {
-      console.log(`Drainned LogSource`);
+      //console.log(`Drainned LogSource`);
     }
   }
   printer.done();
   return console.log("Sync sort complete.");
-};
+
+  
+}
+
